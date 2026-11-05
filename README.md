@@ -1,7 +1,7 @@
 # AFSD — Apple Feature-Spec Development
 
 Plug-in para **Claude Code** (uso principal, conectado a Xcode por MCP) y para el agente de Claude de Xcode. Es la misma carpeta para los dos.
-Autor: Carlos. Estado: versión 0.3.0, en pruebas.
+Autor: Carlos. Estado: versión 0.5.0, en pruebas.
 
 ## Cómo se usa
 - **Claude Code:** en `~/.zshrc`, junto a `cx` (que carga el plugin oficial de Xcode):
@@ -27,13 +27,15 @@ Base: el enfoque de Apple (spec primero, `/plan`, tests, cierre) más features c
 ## Skills
 | Se invoca | Qué hace | Cuándo |
 |---|---|---|
-| `afsd init` | Crea `CLAUDE.md`, `01-TOOLS`, `02-DOCS`, `test.sh`, `.gitignore` y el esqueleto de `arquitectura.md`. No decide arquitectura | Proyecto nuevo |
-| `afsd adopt` | Lo mismo, y ejecuta `afsd arch sync` para mapear el proyecto (sin documentar features) | Proyecto que ya existe |
+| `afsd init` | Crea `CLAUDE.md`, `01-TOOLS`, `02-DOCS`, `test.sh`, `.gitignore` y el esqueleto de `arquitectura.md`. No decide arquitectura | Proyecto de Xcode recién creado por ti (nunca crea proyectos) |
+| `afsd adopt` | Lo mismo, y ejecuta `afsd arch sync` para mapear el proyecto (sin documentar features) | Proyecto que ya existe (exige proyecto de Xcode) |
 | `afsd arch define` | Fija **Objetivo** y **Reglas** de la arquitectura a partir de un preset (`ios-clean`) con 1–3 preguntas | Tras `init`, o al cambiar de rumbo |
 | `afsd arch sync` | Ejecuta `check.sh`; si la huella cambió, re-mapea solo lo cambiado y actualiza **Actual** | Proyecto adoptado o cambios hechos fuera del flujo |
 | `afsd feature [idea]` | Crea la feature y su spec (o la siguiente spec pendiente). Para hasta que se aprueba | Empezar una feature |
 | `afsd plan` | Escribe el plan de tareas en un archivo, para hasta aprobarlo, luego implementa tarea a tarea | Spec aprobada |
 | `afsd close` | Verifica criterios con pruebas, registra decisiones y lecciones, cierra y hace commit | Tareas terminadas |
+| `afsd auto [--plan] <idea>` | Feature completa con un subagente por fase: solo se para a aprobar la spec (y el plan con `--plan`), en lo visual y en el commit. Solo Claude Code | Features que no quieres llevar paso a paso |
+| `afsd quick <cambio>` | Cambio pequeño sin spec ni plan (≤3 archivos): tests + `check.sh` + commit con confirmación. Si no cabe, deriva a `afsd feature` (sin probar) | Arreglos y ajustes triviales |
 | `afsd ping` | Responde `>>> AFSD trabajando correctamente <<<` con la versión, y si el proyecto y los hooks están detectados | Comprobar que el plugin carga |
 
 ## Flujo
@@ -79,6 +81,16 @@ El script y el preset viven en `skills/afsd-arch/`; la skill copia `check.sh` al
 - `check.sh` (0.2.0): probado con un proyecto de ejemplo (huella igual/cambiada, reglas deny y only, carpetas inexistentes, rutas con espacios), en bash de Linux; falta probarlo en el Mac.
 - **Sin probar:** `afsd adopt` en un proyecto real; `afsd-arch` en Xcode; hooks en Xcode (no hay confirmación de que los plug-ins los ejecuten); proyectos grandes.
 
+## Cambios en 0.5.0
+- `init` y `adopt` exigen un proyecto de Xcode existente (nunca lo crean) y ofrecen al final el commit del andamiaje.
+- Modificar features: `afsd feature` genera spec con `Modifica:`; `plan` actualiza tests afectados; `close` reescribe la spec antigua.
+- Nueva skill `afsd-quick`; el hook de edición no pregunta si existe `02-DOCS/.quick` de menos de 30 min.
+- Pendiente de probar en real: todo lo anterior.
+
+## Cambios en 0.4.0
+- Nueva skill `afsd-auto`: modo automático con subagentes (sin probar).
+- Incluidas cinco skills de código Swift de terceros (ver `THIRD_PARTY_NOTICES.md`); preset `ios-clean` con iOS 26.
+
 ## Cambios en 0.3.0
 - Uso principal en Claude Code con `--plugin-dir`; hooks SessionStart, PreToolUse y Stop.
 - Las skills piden usar las herramientas MCP de Xcode para compilar, tests y previews (si no hay, `test.sh`).
@@ -99,7 +111,7 @@ y sustituir a mano el bloque `## AFSD` de su `CLAUDE.md` por el de `skills/afsd-
 ## Pendiente
 - Probar 0.3.0 en Claude Code (`cxa`): que carguen las skills y los tres hooks, y que `check.sh` y `presets/` se encuentren en la carpeta de la skill.
 - Comprobar el nombre real de las herramientas MCP de Xcode en Claude Code (el hook de edición reconoce `mcp__…XcodeWrite/XcodeUpdate`).
-- Fase 2: modo `afsd arch check`; comprobación de Reglas en `afsd plan`; lista de deuda (Objetivo frente a Actual) en `index.md`; tamaños S/M/L y `afsd quick`; paquetes Swift locales como opción del preset.
+- Fase 2: modo `afsd arch check`; comprobación de Reglas en `afsd plan`; lista de deuda (Objetivo frente a Actual) en `index.md`; tamaños S/M/L; paquetes Swift locales como opción del preset.
 - Skill propia de código Swift (convenciones de Carlos) dentro del plugin.
 - Probar `afsd adopt` en un proyecto existente.
 - Ajustar la versión en `.claude-plugin/plugin.json` al publicar cambios; opcional: subir a git.

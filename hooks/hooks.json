@@ -1,0 +1,15 @@
+{
+  "description": "AFSD: memoria al empezar, spec antes de código, nota de sesión antes de cambiar de chat",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "python3 -I -B \"${CLAUDE_PLUGIN_ROOT}/hooks/afsd_hook.py\" session-start", "timeout": 10 } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Edit|Write|MultiEdit|mcp__.*(XcodeWrite|XcodeUpdate)",
+        "hooks": [ { "type": "command", "command": "python3 -I -B \"${CLAUDE_PLUGIN_ROOT}/hooks/afsd_hook.py\" pre-edit", "timeout": 10 } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "python3 -I -B \"${CLAUDE_PLUGIN_ROOT}/hooks/afsd_hook.py\" stop", "timeout": 10 } ] }
+    ]
+  }
+}

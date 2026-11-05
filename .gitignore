@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+._*
+
+# Copias de seguridad locales
+_backup*.tar.gz
+
+# Python
+__pycache__/
+*.pyc
+
+# Editores
+.idea/
+.vscode/
+*.swp
+
+# Temporales
+*.tmp
+hooks/debug.log
