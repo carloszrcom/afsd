@@ -79,7 +79,8 @@ El script y el preset viven en `skills/afsd-arch/`; la skill copia `check.sh` al
 - `init`, `feature`, `plan`, `close` con dos features (contador, ajustes con 2 specs) y cambios de chat con prompt de continuación: OK.
 - Memoria entre chats vía `estado.md` y notas de sesión: OK.
 - `check.sh` (0.2.0): probado con un proyecto de ejemplo (huella igual/cambiada, reglas deny y only, carpetas inexistentes, rutas con espacios), en bash de Linux; falta probarlo en el Mac.
-- **Sin probar:** `afsd adopt` en un proyecto real; `afsd-arch` en Xcode; hooks en Xcode (no hay confirmación de que los plug-ins los ejecuten); proyectos grandes.
+- **Probado en Claude Code (`cxa`):** el plugin carga, `afsd ping`, y los hooks SessionStart y PreToolUse. Stop solo con entradas simuladas.
+- **Sin probar:** `afsd adopt` en un proyecto real; `afsd auto`; `afsd quick`; hooks en Xcode; proyectos grandes.
 
 ## Cambios en 0.5.0
 - `init` y `adopt` exigen un proyecto de Xcode existente (nunca lo crean) y ofrecen al final el commit del andamiaje.
@@ -109,12 +110,12 @@ El script y el preset viven en `skills/afsd-arch/`; la skill copia `check.sh` al
 y sustituir a mano el bloque `## AFSD` de su `CLAUDE.md` por el de `skills/afsd-init/SKILL.md` (paso 5).
 
 ## Pendiente
-- Probar 0.3.0 en Claude Code (`cxa`): que carguen las skills y los tres hooks, y que `check.sh` y `presets/` se encuentren en la carpeta de la skill.
+- Probar el hook Stop en real.
 - Comprobar el nombre real de las herramientas MCP de Xcode en Claude Code (el hook de edición reconoce `mcp__…XcodeWrite/XcodeUpdate`).
 - Fase 2: modo `afsd arch check`; comprobación de Reglas en `afsd plan`; lista de deuda (Objetivo frente a Actual) en `index.md`; tamaños S/M/L; paquetes Swift locales como opción del preset.
 - Skill propia de código Swift (convenciones de Carlos) dentro del plugin.
-- Probar `afsd adopt` en un proyecto existente.
-- Ajustar la versión en `.claude-plugin/plugin.json` al publicar cambios; opcional: subir a git.
+- Probar `afsd adopt`, `afsd auto` y `afsd quick` en proyectos reales.
+- Completar autor y licencia de las skills de terceros (`THIRD_PARTY_NOTICES.md`) antes de publicar.
 ## Notas para quien (o el agente que) continúe
 - El plug-in usa el mismo formato que los de Claude Code: `.claude-plugin/plugin.json` + `skills/<nombre>/SKILL.md`.
 - Editar las skills en esta carpeta; en Xcode, quitar y volver a añadir el plug-in para que cargue los cambios.
