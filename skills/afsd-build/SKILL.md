@@ -26,7 +26,7 @@ Si falta `02-DOCS/`, di que antes hay que crear el proyecto en Xcode y ejecutar 
 5. **Roadmap:** `02-DOCS/specs/_roadmap.md`, features en orden de dependencias; cada una con 1–4 specs pequeñas (máx. 8 criterios, comprobables con test o en el simulador):
 ```
 # Roadmap
-Fuente: <ruta del documento> · Resumen: ../wiki/juego.md · Estado: borrador · Rama: afsd/build
+Fuente: <ruta del documento, relativa a la raíz del proyecto (ej. docs/diseno.md), no a 02-DOCS> · Resumen: ../wiki/juego.md · Estado: borrador · Rama: afsd/build
 | # | Feature | Specs | Estado | Depende de |
 |---|---------|-------|--------|------------|
 | 01 | pagos-base | 01-servicio-compras-stub | pendiente | - |

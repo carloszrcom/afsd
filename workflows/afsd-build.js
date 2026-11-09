@@ -5,8 +5,12 @@ export const meta = {
 }
 
 // Opciones (opcionales): /afsd:build con maxSpecs 3  →  args = { maxSpecs: 3 }
+// args puede llegar como objeto ({maxSpecs: 3}) o como texto ("con maxSpecs 3", "3", "maxSpecs=3")
 const opts = (typeof args === 'object' && args !== null) ? args : {}
-const MAX_SPECS = Number.isInteger(opts.maxSpecs) && opts.maxSpecs > 0 ? opts.maxSpecs : Infinity
+const texto = typeof args === 'string' ? args : ''
+const delTexto = (texto.match(/maxSpecs\D{0,3}(\d+)/i) || texto.match(/^\s*(\d+)\s*$/) || [])[1]
+const pedido = Number.isInteger(opts.maxSpecs) ? opts.maxSpecs : parseInt(opts.maxSpecs ?? delTexto, 10)
+const MAX_SPECS = Number.isInteger(pedido) && pedido > 0 ? pedido : Infinity
 const MAX_RONDAS = 12   // rondas de implementación por spec (máx. 3 tareas por ronda)
 const MAX_ARREGLOS = 2  // intentos de arreglo cuando falla la verificación o la revisión
 
@@ -58,7 +62,7 @@ async function construir(s, id) {
   const rutaSpec = `02-DOCS/specs/${s.feature}/${s.spec}.md`
 
   const spec = await paso(`Paso SPEC de ${id}. Carga la skill afsd-feature (herramienta Skill) y haz sus pasos 1, 4 y 5 para la spec ${s.spec} de la feature ${s.feature}, con estas reglas del modo build:
-- usa 02-DOCS/wiki/juego.md y solo la sección § del documento de diseño (ruta en la línea "Fuente:" del roadmap) que cubre esta spec;
+- usa 02-DOCS/wiki/juego.md y solo la sección § del documento de diseño (ruta en la línea "Fuente:" del roadmap; si es relativa a 02-DOCS/specs, resuélvela desde ahí; el archivo existe, no digas que no está disponible sin comprobarlo con Read) que cubre esta spec;
 - si ${rutaSpec} ya existe y está aprobada, no la reescribas;
 - máximo 8 criterios, cada uno comprobable con un test o en el simulador; la lógica del juego, en modelos Swift puros con tests;
 - aprobación automática: "Estado: aprobada" en la spec y en su fila de _feature.md (créalo con "Estado: en curso" si la feature es nueva); fila del roadmap "en curso"; estado.md con Feature activa ${s.feature}, Spec activa ${s.spec}, Fase: plan.`, E_SPEC, `${id} · spec`)
@@ -68,7 +72,7 @@ async function construir(s, id) {
   if (!plan || !plan.ok) return fallo(plan, 'no se pudo escribir el plan')
 
   for (let ronda = 1; ronda <= MAX_RONDAS; ronda++) {
-    const imp = await paso(`Paso IMPLEMENTAR de ${id}, ronda ${ronda}. Carga la skill afsd-plan y sigue su paso 4: haz como máximo 3 tareas [ ] consecutivas de 02-DOCS/specs/${s.feature}/${s.spec}.plan.md, cada una con su comprobación (build y RunSomeTests con los tests de la tarea, o 01-TOOLS/build/test.sh). Marca [x] solo lo comprobado. Las tareas que solo se pueden comprobar a mano en el simulador pásalas a [~] sin intentarlas. Si un test falla y no lo resuelves en 2 intentos, para: ok=false y en motivo el fallo exacto. Devuelve hechasAhora (tareas que pasaste a [x] o [~] en esta ronda) y pendientes (tareas [ ] que quedan).`, E_IMPL, `${id} · código ${ronda}`)
+    const imp = await paso(`Paso IMPLEMENTAR de ${id}, ronda ${ronda}. Carga la skill afsd-plan y sigue su paso 4: haz como máximo 3 tareas [ ] consecutivas de 02-DOCS/specs/${s.feature}/${s.spec}.plan.md, cada una con su comprobación (build y RunSomeTests con los tests de la tarea, o 01-TOOLS/build/test.sh). Marca [x] en el plan justo después de comprobar cada tarea, no al final de la ronda (si te cancelan, lo hecho debe quedar anotado). Marca [x] solo lo comprobado. Las tareas que solo se pueden comprobar a mano en el simulador pásalas a [~] sin intentarlas. Si un test falla y no lo resuelves en 2 intentos, para: ok=false y en motivo el fallo exacto. Devuelve hechasAhora (tareas que pasaste a [x] o [~] en esta ronda) y pendientes (tareas [ ] que quedan).`, E_IMPL, `${id} · código ${ronda}`)
     if (!imp || !imp.ok || imp.pendientes === 0 || imp.hechasAhora === 0) break // los fallos los recoge la verificación
   }
 
@@ -107,8 +111,8 @@ Carga la skill afsd-close y haz sus pasos 3 a 5 con estas reglas del modo build:
 - marca cada criterio según ese resultado: ok → [x] con su prueba; manual → [~] (no pidas revisión al usuario);
 - añade a 02-DOCS/build/revision.md (créalo con "# Revisión manual" si falta; solo se añade) una línea por criterio manual y por decisión [revisar] de esta spec: "- <fecha> · ${id} · <qué revisar o probar>";
 - lecciones con afsd-lessons, pero sin escribir reglas en CLAUDE.md: las reglas propuestas van también a revision.md;
-- roadmap: ✓ en la spec ${s.spec}; si era la última de ${s.feature}, la feature pasa a "hecha";
-- estado.md sin spec activa y Siguiente paso: /afsd:build.
+- orden obligatorio, para poder reanudar si te cancelan: primero todo lo demás (criterios, revision.md, lecciones, wiki); lo ÚLTIMO, justo antes del commit, el roadmap (✓ en la spec ${s.spec}; si era la última de ${s.feature}, la feature pasa a "hecha") y estado.md (sin spec activa, Siguiente paso: /afsd:build);
+- no dejes pasar tiempo entre esos dos cambios y el commit: hazlos y commitea seguido.
 Después haz un commit sin pedir confirmación, solo con los archivos de esta spec y de 02-DOCS: "feat(${s.feature}): ${s.spec} — <resumen en una línea>". Sin push. Devuelve el hash corto del commit y, en revisar, las líneas que añadiste a revision.md.`, E_CERRAR, `${id} · cerrar`)
   if (!cierre || !cierre.ok) return fallo(cierre, 'no se pudo cerrar ni hacer el commit')
   return { ok: true, commit: cierre.commit, revisar: cierre.revisar }
