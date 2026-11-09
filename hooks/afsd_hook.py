@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Hooks de AFSD para Claude Code. Solo actúan en proyectos con 02-DOCS/wiki/estado.md.
 
-session-start  inyecta estado.md y la nota de sesión más reciente (ahorra lecturas al empezar).
-pre-edit       al editar un .swift sin estar en fase de implementación (y sin marcador `afsd quick` reciente), pide confirmación.
+session-start  inyecta estado.md, las 5 últimas lecciones sin promover y la nota de sesión más reciente (ahorra lecturas al empezar).
+pre-edit       al editar un .swift sin estar en fase de implementación (y sin marcador `afsd quick` reciente), pide confirmación;
+               en `afsd build` (AFSD_BUILD=1, sin usuario) lo deniega con el motivo.
 stop           si la respuesta propone "un chat nuevo" y no hay nota de sesión reciente, obliga a escribirla.
 
 Compatible con el python3 de macOS (3.9). Ante cualquier error, no bloquea nada.
@@ -14,7 +15,9 @@ import time
 
 NOTA_RECIENTE_SEG = 20 * 60
 MARCADOR_QUICK_SEG = 30 * 60
-MAX_CONTEXTO = 3000
+MAX_CONTEXTO = 4000
+MAX_LECCIONES = 5
+MAX_LINEA_LECCION = 220
 
 
 def leer_entrada():
@@ -50,6 +53,13 @@ def nota_mas_reciente(root):
     return max(notas, key=os.path.getmtime) if notas else None
 
 
+def lecciones_recientes(root):
+    """Últimas lecciones de lessons.md que aún no se han promovido a regla (' → regla')."""
+    texto = leer(os.path.join(root, "02-DOCS", "wiki", "lessons.md"))
+    lineas = [l.strip() for l in texto.splitlines() if l.strip().startswith("- ") and "→ regla" not in l]
+    return [l[:MAX_LINEA_LECCION] for l in lineas[-MAX_LECCIONES:]]
+
+
 def fase(root):
     for linea in leer(ruta_estado(root)).splitlines():
         if linea.strip().lower().startswith("- fase:"):
@@ -67,6 +77,9 @@ def session_start(data):
     if not estado:
         return
     partes = ["Proyecto AFSD. Ya tienes en contexto `02-DOCS/wiki/estado.md`; no lo vuelvas a leer.", estado.strip()]
+    lecciones = lecciones_recientes(root)
+    if lecciones:
+        partes.append("Lecciones recientes de este proyecto (`02-DOCS/wiki/lessons.md`); aplícalas:\n" + "\n".join(lecciones))
     nota = nota_mas_reciente(root)
     if nota:
         partes.append("Nota de sesión más reciente (`%s`):\n%s" % (os.path.relpath(nota, root), leer(nota, 1500).strip()))
@@ -91,6 +104,14 @@ def pre_edit(data):
             return
     except OSError:
         pass
+    if os.environ.get("AFSD_BUILD") == "1":
+        emitir({"hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": "AFSD build: la fase es \"%s\", no implementación. Aprueba antes el plan "
+                                        "(afsd-plan pasos 1-3, Fase: implementación en estado.md) y vuelve a intentarlo." % (f or "sin fase"),
+        }})
+        return
     emitir({"hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": "ask",

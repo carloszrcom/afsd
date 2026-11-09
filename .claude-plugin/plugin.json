@@ -2,7 +2,7 @@
   "name": "afsd",
   "displayName": "AFSD",
   "description": "Apple Feature-Spec Development: spec, plan, implement, verify and close, with project memory in 02-DOCS and a checkable architecture contract.",
-  "version": "0.5.0",
+  "version": "0.9.1",
   "author": {
     "name": "Carlos"
   },

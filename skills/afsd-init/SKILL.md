@@ -17,7 +17,7 @@ Si no existe, para y di en una línea: «Crea primero el proyecto en Xcode y vue
 
 1. Crea en la raíz (solo lo que falte):
    - `01-TOOLS/` con un `README.md` de una línea
-   - `02-DOCS/wiki/`: `index.md` (mapa), `estado.md`, `arquitectura.md`, `decisions.md` (solo se añade), `lessons.md`
+   - `02-DOCS/wiki/`: `index.md` (mapa), `estado.md`, `arquitectura.md`, `decisions.md` (solo se añade), `lessons.md` (solo se añade; con el encabezado de `afsd-lessons`)
    - `02-DOCS/specs/`, `02-DOCS/sessions/` y `02-DOCS/archive/`, cada una con un `.gitkeep`
    En `index.md`, las rutas son relativas a `02-DOCS/wiki/` (por ejemplo `../../01-TOOLS/`).
 
@@ -40,8 +40,23 @@ Comandos: tests con `01-TOOLS/build/test.sh` · arquitectura con `bash 01-TOOLS/
 (pendiente: `afsd arch define`)
 ```
 
-3. Crea `01-TOOLS/build/test.sh` si conoces el scheme y el simulador; si no, pregúntalo una vez.
-   Comprueba con `xcodebuild -list` que el scheme incluye un target de tests; si los tests viven en otro scheme, usa ese.
+3. Crea `01-TOOLS/build/test.sh`. Scheme: el que incluye el target de tests (`xcodebuild -list`; si los tests viven en otro scheme, usa ese). Pregunta solo si no lo puedes deducir.
+   **Simulador de pruebas: el que el usuario tenga seleccionado en Xcode** (destino activo). No lo cambies ni impongas otro (ni una iOS mínima): uno solo, el suyo.
+   - Con MCP: léelo con `XcodeListRunDestinations` (`isActive`). Si es un dispositivo físico o `Any iOS …`, avisa y pide que elija un simulador en Xcode.
+   - `test.sh` es solo el **respaldo sin MCP**. Pon en `DESTINO` el identificador (`id=<UDID>`) de ese simulador: es más robusto que el nombre (puede haber varios con el mismo). Sin MCP, usa el simulador arrancado (`xcrun simctl list devices booted`) o pregunta una vez.
+   Contenido (si el comando falla antes de ejecutar tests, enseña el principio de la salida completa; si no, filtra para gastar pocos tokens):
+```
+#!/bin/zsh
+# AFSD · respaldo de tests sin MCP: <iPhone …> · iOS <versión> (el simulador seleccionado en Xcode al hacer init). Para otro, cambia DESTINO.
+DESTINO="platform=iOS Simulator,id=<UDID>"
+LOG="${TMPDIR:-/tmp}/afsd-test.log"
+xcodebuild test <-project X.xcodeproj | -workspace X.xcworkspace> -scheme "<scheme>" -destination "$DESTINO" -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 120 2>&1 | tee "$LOG" \
+  | grep -E "error|failed|passed|Executed|✘|✔|\*\* (TEST|BUILD)" | tail -n 60
+rc=${pipestatus[1]}
+[ $rc -ne 0 ] && ! grep -qE -e "Executed" -e "\*\* TEST" "$LOG" && head -n 20 "$LOG"
+exit $rc
+```
+   En `arquitectura.md`, línea **Comandos** de Actual, añade `· simulador: el activo en Xcode`.
    Dale permiso de ejecución (`chmod +x`) y, si hay git, `git update-index --chmod=+x 01-TOOLS/build/test.sh`. Si no queda ejecutable, se lanza con `zsh 01-TOOLS/build/test.sh`.
 
 4. Si no existe `.gitignore`, créalo con `xcuserdata/`, `.DS_Store` y `DerivedData/`.
@@ -55,8 +70,10 @@ Comandos: tests con `01-TOOLS/build/test.sh` · arquitectura con `bash 01-TOOLS/
 - Mapa completo: `02-DOCS/wiki/index.md` (léelo solo si la tarea toca otra zona).
 - Regla: no se escribe código de una feature nueva sin spec aprobada.
 - Arquitectura: respeta las Reglas de `02-DOCS/wiki/arquitectura.md`. Si cambias la estructura (targets, carpetas, dependencias), ejecuta `bash 01-TOOLS/arch/check.sh`; la sección Actual y la huella las actualiza `afsd close` (fuera del flujo, `afsd arch sync`).
-- Compilar, tests y previews: usa las herramientas MCP de Xcode si están disponibles; si no, `01-TOOLS/build/test.sh`.
+- Compilar, tests y previews: usa las herramientas MCP de Xcode si están. Tests y previews se hacen en el simulador que el usuario tiene seleccionado en Xcode (destino activo): no lo cambies. Si el destino activo no es un simulador (dispositivo físico o `Any iOS …`), avisa y para. Si una llamada falla por falta de aprobación o no hay ventana, abre el proyecto con `XcodeOpenWorkspace` (con el servicio headless es obligatorio y devuelve el `workspaceIdentifier` que sustituye a `tabIdentifier`). Con Swift Testing, el resumen de `RunAllTests`/`RunSomeTests` puede salir vacío (`total: 0`) aunque los tests pasen: no lo des por bueno ni por malo; lee el log de consola que devuelve la herramienta (`passed`/`failed` y `** TEST FINISHED **`) y exige al menos un test ejecutado; si no puedes, usa `01-TOOLS/build/test.sh`. Sin MCP: `01-TOOLS/build/test.sh`.
+- Tests que no se cuelgan: todo test con async, streams, continuations o confirmaciones lleva `.timeLimit(.minutes(1))` (mejor en el `@Suite`); nunca un `await` o `for await` sin límite: suscríbete antes de provocar el evento y toma solo el primer valor esperado. Si `RunAllTests` no responde en unos minutos, páralo (en Xcode, ⌘.) y trátalo como test colgado: el que aparece `started` sin `passed`/`failed` en el log; arréglalo antes de seguir.
 - Decisiones: añade al final de `02-DOCS/wiki/decisions.md` `- D-NN · <fecha> · <spec> · <decisión> · <por qué>` (nunca se borra nada).
+- Lecciones: si el usuario te corrige o algo falla dos veces, aplica `afsd-lessons` (se anota en `02-DOCS/wiki/lessons.md`; las repetidas pasan, con permiso, a `## Reglas aprendidas` de este archivo).
 - Cambio de chat: al acabar una fase o una tarea, o si llevas varios archivos grandes leídos, salidas largas de build/tests o empiezas a repetirte, para y propón un chat nuevo.
 - Solo si se cambia de chat: antes escribe `02-DOCS/sessions/<fecha>-<feature>-<NN-spec>.md` (si existe, reescríbela entera; máx. 10 líneas) y actualiza `estado.md`.
   Formato: `# Sesión <fecha> · <feature>/<NN-spec>` y las líneas `- Hecho:`, `- Pendiente:`, `- Archivos tocados:`, `- Siguiente: <prompt exacto>`.

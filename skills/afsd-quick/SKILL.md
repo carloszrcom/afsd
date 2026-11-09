@@ -17,12 +17,12 @@ Si no cabe (o si cambia comportamiento de una spec ya hecha), dilo en una línea
 
 ## 3. Hacer y comprobar
 - Haz el cambio. Si arregla un fallo, añade o ajusta el test que lo habría detectado.
-- Ejecuta los tests (herramientas MCP de Xcode si están; si no, `zsh 01-TOOLS/build/test.sh`) y `bash 01-TOOLS/arch/check.sh`.
+- Ejecuta los tests (herramientas MCP de Xcode si están, en el destino activo de Xcode; si no, `zsh 01-TOOLS/build/test.sh`) y `bash 01-TOOLS/arch/check.sh`.
 - No marques como hecho sin esa prueba. Si falla, corrige; si no se resuelve a los 2 intentos, para y explícalo.
 - Si algo es visual, dilo: queda para que el usuario lo compruebe.
 
 ## 4. Registrar y cerrar
-- `decisions.md`: solo si hubo una decisión no obvia (`- D-NN · <fecha> · quick · <decisión> · <por qué>`). `lessons.md`: solo si algo sorprendió.
+- `decisions.md`: solo si hubo una decisión no obvia (`- D-NN · <fecha> · quick · <decisión> · <por qué>`). Lecciones: solo si algo sorprendió o te corrigieron (`afsd-lessons`).
 - Si cambió la estructura (huella *cambiada*), ejecuta `afsd arch sync` en un chat aparte, o dilo al usuario.
 - Muestra los archivos cambiados y pide confirmación. Con el sí, commit: `fix(<zona>): <resumen>` (o `chore`/`refactor`). No hagas push. No incluyas cambios ajenos.
 

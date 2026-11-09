@@ -32,7 +32,7 @@ Resume el plan en cinco líneas y pide aprobación (el usuario puede editarlo co
 Al aprobar: `Estado: aprobado` en el plan; en `estado.md`, Fase: implementación y Siguiente paso: `afsd plan` (T1).
 
 ## 4. Implementar
-- Haz la primera tarea `[ ]`. Ejecuta su comprobación (build y tests con las herramientas MCP de Xcode si están; si no, `01-TOOLS/build/test.sh`).
+- Haz la primera tarea `[ ]`. Ejecuta su comprobación (build y tests con las herramientas MCP de Xcode si están, en el destino activo de Xcode: `RunSomeTests` con los tests de la tarea, no todos; si no hay MCP, `01-TOOLS/build/test.sh`). Si el resumen sale vacío con Swift Testing, mira el log de consola (ver `CLAUDE.md`). Escribe los tests con `.timeLimit(.minutes(1))` si usan async o streams: un test sin límite puede colgar toda la ejecución.
 - Solo si pasa, márcala `[x]` y actualiza "Siguiente paso" en `estado.md`.
 - Decisión no obvia (dependencia, cambio de proyecto, desvío del plan): una línea en `decisions.md`
   con `- D-NN · <fecha> · <spec> · <decisión> · <por qué>`.

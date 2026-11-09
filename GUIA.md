@@ -38,9 +38,29 @@ Cada paso termina con **Siguiente** y el prompt exacto: pégalo tal cual (en est
 ## 6. Cambio pequeño: `afsd quick <cambio>`
 Hasta ~3 archivos, sin comportamiento nuevo (arreglo, texto, ajuste). Sin spec ni plan: hace el cambio, pasa tests y `check.sh`, y pide confirmación para el commit. Si no cabe, te manda a `afsd feature`.
 
+## 7. Lecciones (por proyecto)
+Si corriges al agente o algo falla dos veces, `afsd-lessons` lo anota solo en `02-DOCS/wiki/lessons.md` y el chat sigue.
+Cuando una lección se repite, te enseña una regla de una línea para `CLAUDE.md` y espera tu `sí`.
+De vez en cuando: `afsd lessons review` (agrupa, propone fusionar y archivar). Las lecciones no salen del proyecto.
+Proyectos ya creados: sustituye su bloque `## AFSD` de `CLAUDE.md` por el de `skills/afsd-init/SKILL.md` (paso 5) para que el agente use las lecciones.
+
+## 8. App o juego entero desde el documento de diseño (automático)
+0. Requisitos: workflows activos (en Pro: `/config` → Dynamic workflows), MCP de Xcode activo y un simulador elegido en Xcode.
+1. Crea el proyecto en Xcode (con target de tests), `git init` y primer commit.
+2. Copia el documento al proyecto (p. ej. `docs/diseno.md`) y haz commit.
+3. `cxa` → `afsd init` → `/clear` → `afsd arch define` (si hay compras: «sí, pagos con RevenueCat»). Commit.
+4. `/clear` → `afsd build plan docs/diseno.md` → responde las preguntas → `apruebo el roadmap` → acepta los permisos que propone.
+5. `/afsd:build` (prueba corta: `/afsd:build con maxSpecs 3`). Sigue el progreso con `/workflows`; deja el Mac despierto (`caffeinate -dims` en otra terminal).
+6. Al terminar: `/clear` → `afsd build report` → prueba en el simulador lo que te diga → ajustes con `afsd quick` o `afsd feature`.
+7. Merge de la rama `afsd/build` cuando te guste. Pagos reales: `afsd feature pagos-revenuecat`.
+
+## Simulador de pruebas
+Los tests y las previews usan **el simulador que tengas seleccionado en Xcode**. Elígelo antes de empezar (un simulador, no un dispositivo físico) y AFSD no lo cambia.
+Sin MCP, `01-TOOLS/build/test.sh` usa el que estaba seleccionado al hacer `afsd init`; para otro, cambia `DESTINO` en ese archivo.
+
 ## Si algo va raro
 - `afsd ping` → comprueba que el plugin carga (versión, hooks, proyecto).
 - `bash 01-TOOLS/arch/check.sh` → huella y violaciones de arquitectura.
 - `afsd arch sync` → rehace el mapa si cambiaste estructura fuera del flujo.
-- Sin probar aún en real: `adopt`, `auto`, `quick` y los hooks.
+- Sin probar aún en real: `adopt`, `auto`, `quick`, `lessons`, `build` y los hooks.
 - Estado actual: `02-DOCS/wiki/estado.md`.

@@ -12,6 +12,7 @@ Lee `02-DOCS/wiki/estado.md` y `02-DOCS/wiki/arquitectura.md`. Nada más.
 - Si falta `02-DOCS/`, di que hay que ejecutar `afsd init` (proyecto nuevo) o `afsd adopt` (existente) y para.
 - Si **Reglas** de `arquitectura.md` está vacía o pendiente, avisa una vez de que conviene `afsd arch define` antes; sigue si el usuario dice que sí.
 - Si hay feature activa y el usuario no trae idea nueva: escribe la **siguiente spec pendiente** de su `_feature.md` (salta al paso 4).
+- Si la idea nombra una feature `aparcada` en `02-DOCS/specs/_roadmap.md` (p. ej. `pagos-revenuecat`), actívala: fila y `_feature.md` a `en curso`; su spec ya está escrita: revísala con el usuario y salta al paso 6.
 - Si hay feature activa y trae una idea nueva: pregunta si se pausa la actual o si la idea es parte de ella.
 - **Modificación.** Si la idea cambia el comportamiento de algo ya hecho: localiza la spec afectada (`02-DOCS/specs/*/_feature.md` y `02-DOCS/specs/_actual/`; lee solo su título y sus criterios). Si el usuario no la indicó, propónla y confirma.
   La spec nueva es **otra spec** (siguiente `NN`) en la misma carpeta de esa feature, no una edición de la antigua: vuelve a poner `Estado: en curso` en su `_feature.md` y añade la fila.

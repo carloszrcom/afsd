@@ -10,7 +10,8 @@ Lee `02-DOCS/wiki/estado.md`, la spec activa, su `.plan.md` y `_feature.md`.
 Si quedan tareas `[ ]` en el plan, dilo y para. Si no hay plan, avísalo y sigue con los criterios de la spec.
 
 ## 2. Verificar con pruebas
-- Compila y ejecuta los tests (herramientas MCP de Xcode si están; si no, `01-TOOLS/build/test.sh`). Compara con la línea base de `arquitectura.md` si existe.
+- Compila y ejecuta los tests: herramientas MCP de Xcode si están (`RunAllTests`, en el destino activo de Xcode); si no, `01-TOOLS/build/test.sh`.
+  El resumen de `RunAllTests` puede salir vacío con Swift Testing (`total: 0`): lee el log de consola que devuelve y exige al menos un test ejecutado y ninguno fallido. «0 tests» nunca cuenta como prueba. Si la ejecución no termina, hay un test colgado: busca el `started` sin `passed`/`failed`, arréglalo (con `.timeLimit`) y repite. Compara con la línea base de `arquitectura.md` si existe.
 - Si existe `01-TOOLS/arch/check.sh`, ejecútalo con `bash 01-TOOLS/arch/check.sh`. Una violación en archivos que tocó esta spec cuenta como criterio `[ ]`: explícala y para (o, si el usuario lo decide, regístrala como excepción en `decisions.md`).
   Las violaciones en archivos que no tocó la spec son anteriores: menciónalas en una línea, no bloquean.
 - Para criterios visuales, renderiza la preview si puedes.
@@ -28,8 +29,8 @@ Cuando confirme, pásalos a `[x]` con "(revisado por el usuario)".
 
 ## 4. Registrar
 - `decisions.md`: decisiones de esta spec que falten (`- D-NN · <fecha> · <spec> · <decisión> · <por qué>`).
-- `lessons.md`: si algo falló o sorprendió, `- <fecha> · <situación> · <lección>`.
-  Si la lección ya estaba, conviértela en una regla de una línea en `CLAUDE.md`.
+- Lecciones: si algo falló o sorprendió, o el usuario te corrigió durante la spec y aún no quedó anotado, aplica `afsd-lessons` (causa raíz, hogar y recurrencia).
+  Si la lección ya estaba, es una barrera pendiente: propón la regla de una línea para `CLAUDE.md` y espera el sí del usuario.
 - Si la spec tiene `Modifica: <feature>/<NN-spec>`: en esa spec anterior, reescribe los criterios afectados con el comportamiento nuevo (o márcalos `~~Cn~~ sustituido por <NN>/Cn`) y añade bajo `Estado:` la línea `Modificada por: <esta spec>`. Si existe su retro-spec en `_actual/`, actualízala. Muéstralo en una línea.
 - `arquitectura.md`: si `check.sh` dijo *Huella: cambiada*, actualiza **Actual** (lo construido del **Objetivo** pasa a Actual) y guarda la huella nueva (`bash 01-TOOLS/arch/check.sh --huella`) y la fecha. No cambies las Reglas sin permiso.
 
