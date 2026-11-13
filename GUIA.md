@@ -48,13 +48,14 @@ Proyectos ya creados: sustituye su bloque `## AFSD` de `CLAUDE.md` por el de `sk
 0. Requisitos: workflows activos (en Pro: `/config` → Dynamic workflows), MCP de Xcode activo y un simulador elegido en Xcode.
 1. Crea el proyecto en Xcode (con target de tests), `git init` y primer commit.
 2. Copia el documento al proyecto (p. ej. `docs/diseno.md`) y haz commit.
-3. `cxa` → `afsd init` → `/clear` → `afsd arch define` (si hay compras: «sí, pagos con RevenueCat»). Commit.
+3. `cxa` → `afsd init` (comprueba una vez que el scheme es testable y que el simulador activo cumple la iOS mínima de los targets; si no, para y te dice cómo arreglarlo) → `/clear` → `afsd arch define` (si hay compras: «sí, pagos con RevenueCat»). Commit.
 4. `/clear` → `afsd build plan docs/diseno.md` → responde las preguntas → `apruebo el roadmap` → acepta los permisos que propone.
 5. `/afsd:build` (prueba corta: `/afsd:build con maxSpecs 3`). Sigue el progreso con `/workflows`; deja el Mac despierto (`caffeinate -dims` en otra terminal).
    - **Parar sin cortar a mitad de spec:** `/afsd:stop` (o `touch 02-DOCS/build/STOP`): acaba la spec en curso, hace su commit y se detiene. Para seguir: `/afsd:resume` (o `rm 02-DOCS/build/STOP`) y `/afsd:build`.
    - **Parar al instante:** cancela. Se retoma igual, pero puede repetir la tarea en curso.
    - **Retomar:** `/afsd:build` siempre sigue por la primera spec pendiente; no hace falta pedirle que revise los docs.
    - **Spec «pendiente de decisión»:** el agente anotó una decisión `[bloqueante]` en `decisions.md`. Cambia `[bloqueante]` por `[decidido]` (puedes corregir el texto) y relanza.
+   - **Cuelgue de un test:** si en `/workflows` ves «(retry N)» en un agente, o el workflow escribe `⚠ CUELGUE en <spec>`, un test no termina (el círculo de Xcode sigue girando). En Xcode busca el test con «started» sin resultado y páralo con ⌘.; el workflow lo intenta arreglar solo (los tests con async llevan `.timeLimit`). Si no se recupera, la spec queda bloqueada con el motivo en el informe.
    - **Coste:** `02-DOCS/build/coste.md` (minutos, rondas, arreglos, tests por spec); los tokens, en `/workflows`.
 6. Al terminar: `/clear` → `afsd build report` → prueba en el simulador lo que te diga → ajustes con `afsd quick` o `afsd feature`.
 7. Merge de la rama `afsd/build` cuando te guste. Pagos reales: `afsd feature pagos-revenuecat`.
@@ -65,6 +66,7 @@ Sin MCP, `01-TOOLS/build/test.sh` usa el que estaba seleccionado al hacer `afsd 
 
 ## Si algo va raro
 - `afsd ping` → comprueba que el plugin carga (versión, hooks, proyecto).
+- Una ejecución de tests que no acaba → test colgado: ⌘. en Xcode y mira el test «started» sin `passed`/`failed` en la consola.
 - `bash 01-TOOLS/arch/check.sh` → huella y violaciones de arquitectura.
 - `afsd arch sync` → rehace el mapa si cambiaste estructura fuera del flujo.
 - Sin probar aún en real: `adopt`, `auto`, `quick`, `lessons`, `build` y los hooks (en `build`, lo nuevo de 0.10.0: `/afsd:stop`, `/afsd:resume`, `[bloqueante]` y el coste).
