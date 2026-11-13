@@ -17,3 +17,6 @@ __pycache__/
 # Temporales
 *.tmp
 hooks/debug.log
+
+# Salidas de Claude
+Claude outputs/

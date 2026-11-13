@@ -14,7 +14,7 @@ Si no existe, para y di en una línea: «Crea primero el proyecto en Xcode y vue
 
 ## 1. Estructura
 Crea solo lo que falte: `01-TOOLS/`, `02-DOCS/wiki/` (`index.md`, `estado.md`, `arquitectura.md`, `decisions.md`, `lessons.md` con el encabezado de `afsd-lessons`),
-`02-DOCS/specs/`, `02-DOCS/sessions/` y `02-DOCS/archive/` (con `.gitkeep`), `01-TOOLS/build/test.sh` (scheme, simulador activo de Xcode y contenido como en `afsd-init` paso 3; `chmod +x`)
+`02-DOCS/specs/`, `02-DOCS/sessions/` y `02-DOCS/archive/` (con `.gitkeep`), `01-TOOLS/build/test.sh` (scheme, simulador activo de Xcode y contenido como en `afsd-init` paso 3; `chmod +x`), y haz las comprobaciones del paso 3b de `afsd-init` (scheme testable y versión mínima de iOS)
 y `.gitignore` solo si no existe (si existe, di qué falta de `xcuserdata/`, `.DS_Store`, `DerivedData/` y añádelo solo con permiso).
 `estado.md` con este formato exacto:
 

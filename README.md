@@ -1,7 +1,7 @@
 # AFSD — Apple Feature-Spec Development
 
 Plug-in para **Claude Code** (uso principal, conectado a Xcode por MCP) y para el agente de Claude de Xcode. Es la misma carpeta para los dos.
-Autor: Carlos. Estado: versión 0.9.1, en pruebas.
+Autor: Carlos. Estado: versión 0.10.0, en pruebas.
 
 ## Cómo se usa
 - **Claude Code:** en `~/.zshrc`, junto a `cx` (que carga el plugin oficial de Xcode):
@@ -38,6 +38,7 @@ Base: el enfoque de Apple (spec primero, `/plan`, tests, cierre) más features c
 | `afsd quick <cambio>` | Cambio pequeño sin spec ni plan (≤3 archivos): tests + `check.sh` + commit con confirmación. Si no cabe, deriva a `afsd feature` (sin probar) | Arreglos y ajustes triviales |
 | `afsd lessons [review]` | Anota una lección en `lessons.md` (causa raíz sin culpas, hogar, recurrencia); la 2.ª vez propone una regla de una línea para `CLAUDE.md` (con tu sí). `review` agrupa, fusiona y archiva. Solo dentro del proyecto. Se activa sola al corregirte | Cuando corriges al agente, algo falla dos veces o quieres repasar |
 | `afsd build plan <doc.md>` · `/afsd:build` · `afsd build report` | Construye la app o el juego entero desde su documento de diseño: `plan` crea el roadmap (una tanda de preguntas y tu aprobación); el workflow `/afsd:build` hace cada spec con agentes nuevos (spec, plan, código, verificación, revisor independiente, commit); `report` lista lo que debes revisar. Pagos solo preparados (RevenueCat) | App nueva con documento de diseño completo |
+| `/afsd:stop` · `/afsd:resume` | Crean y quitan `02-DOCS/build/STOP`: el workflow para al terminar la spec en curso y no arranca mientras exista | Parar `/afsd:build` sin cortar a mitad de spec |
 | `afsd ping` | Responde `>>> AFSD trabajando correctamente <<<` con la versión, y si el proyecto y los hooks están detectados | Comprobar que el plugin carga |
 
 ## Flujo
@@ -76,6 +77,12 @@ Si tras 2 arreglos sigue fallando, guarda el trabajo en `git stash`, marca la fe
 
 **Por qué no pierde el hilo ni gasta tokens repasando.** Cada agente empieza vacío y solo lee la wiki (`estado.md`, roadmap, `juego.md`, la spec y su plan). La verdad está en disco (roadmap con ✓ y commits):
 si paras o se cae, relanzar `/afsd:build` en la misma sesión reutiliza los agentes ya terminados; en una sesión nueva, el agente de preparación lee el roadmap y sigue por la primera spec pendiente.
+
+**Parar y retomar.** `/afsd:stop` (o `touch 02-DOCS/build/STOP`) → el workflow termina la spec en curso, hace su commit y se detiene. `/afsd:resume` (o `rm 02-DOCS/build/STOP`) y `/afsd:build` para seguir. La comprobación la hace un agente que ya estaba trabajando al cerrar la spec: no gasta tokens extra. Cancelar sigue valiendo para parar al instante, a costa de que pueda repetir la tarea que estaba en curso.
+
+**Decisiones bloqueantes.** Las decisiones que cambian lo que la spec debe cumplir se anotan como `[bloqueante]` (no `[revisar]`). La spec se aparca (commit `wip(build)`, fila `pendiente de decisión`) y el workflow sigue con las que no dependen de ella. Para resolverla, cambia `[bloqueante]` por `[decidido]` en `decisions.md` (puedes corregir el texto) y relanza `/afsd:build`. `PARAR_SI_BLOQUEANTE = true` en `workflows/afsd-build.js` hace que pare del todo.
+
+**Tests y coste.** Cada spec ejecuta los tests de su zona; la suite completa, al cerrar cada feature. Los tests colgados se detectan en la verificación (`started` sin resultado) y se corrigen con un arreglo. `02-DOCS/build/coste.md` recibe una línea por spec (minutos, rondas, arreglos, tests); los tokens se ven en `/workflows`.
 
 **Límites.** Prueba la lógica y la interfaz; no sabe si el juego es divertido o está equilibrado: eso queda en `02-DOCS/build/revision.md` para ti.
 Todo va en serie (un proyecto de Xcode y un simulador): no hace specs en paralelo, para no pisar `project.pbxproj`. No hay preguntas a mitad: la única aprobación es la del roadmap.
@@ -122,7 +129,19 @@ El script y el preset viven en `skills/afsd-arch/`; la skill copia `check.sh` al
 - **Probado en Claude Code (`cxa`):** el plugin carga, `afsd ping`, y los hooks SessionStart y PreToolUse. Stop solo con entradas simuladas.
 - **Sin probar:** `afsd adopt` en un proyecto real; `afsd auto`; `afsd quick`; hooks en Xcode; proyectos grandes.
 
+## Cambios en 0.10.0
+- **Suite completa solo al cerrar cada feature.** Antes, cada spec ejecutaba todos los tests; ahora solo los de su zona (y la suite entera en la última spec de la feature o de la tanda). Es el mayor ahorro de tokens y tiempo.
+- **`/afsd:stop` y `/afsd:resume`** (carpeta nueva `commands/`): archivo `02-DOCS/build/STOP`; el workflow lo comprueba al cerrar cada spec (dentro del agente de cierre, sin llamadas extra) y se detiene tras el commit. Si existe al lanzar, no arranca.
+- **Decisiones `[bloqueante]` / `[decidido]`**: la spec afectada se aparca (`wip(build)`), el build sigue con lo que no depende de ella y el informe lo lista. Opción `PARAR_SI_BLOQUEANTE`.
+- **Registro de coste** en `02-DOCS/build/coste.md` (una línea por spec).
+- **Tests colgados**: la verificación abandona una ejecución que no termina en ~10 minutos y devuelve los tests `started` sin resultado; el agente de arreglo los corrige. No hay temporizador en el script (no se ha verificado que el runtime lo permita).
+- Permiso nuevo propuesto por `afsd build plan`: `Bash(rm -f 02-DOCS/build/STOP)`. En proyectos ya planificados, añádelo a mano en `.claude/settings.local.json`.
+- Probado: el script con agentes simulados (suite completa solo en la última de cada feature, STOP tras una spec, spec aparcada con sus dependientes saltadas, coste y STOP en el prompt de cierre). Sin probar en real: `/afsd:stop` y `/afsd:resume` con el workflow en marcha (si se pueden ejecutar desde la misma sesión), y el formato de `commands/` en Claude Code.
+- Copia de la 0.9.1 en `_backup-0.9.1.tar.gz`.
+
 ## Cambios en 0.9.1
+- Aviso de cuelgues: cada agente tiene `stallMs` de 10 min (Claude Code lo reinicia solo; en `/workflows` se ve «(retry N)»). Si un test se cuelga, el workflow escribe `⚠ CUELGUE en <spec>` encima de las fases y lo cuenta como fallo de la spec con el motivo. Si ves «(retry N)», mira en Xcode el test «started» sin resultado y páralo con ⌘.
+- `afsd init`, `afsd adopt` y `afsd build plan` comprueban una vez que el scheme es testable y que el simulador activo cumple la iOS mínima de los targets (paso 3b de `afsd-init`).
 - Tests que no se cuelgan: los tests con async o streams llevan `.timeLimit(.minutes(1))`, `test.sh` usa los límites de tiempo de `xcodebuild`, y las skills y el workflow indican qué hacer si una ejecución no termina (buscar el test `started` sin resultado).
 
 ## Cambios en 0.9.0
@@ -188,13 +207,14 @@ El script y el preset viven en `skills/afsd-arch/`; la skill copia `check.sh` al
 y sustituir a mano el bloque `## AFSD` de su `CLAUDE.md` por el de `skills/afsd-init/SKILL.md` (paso 5).
 
 ## Pendiente
+- Probar en real las novedades de 0.10.0 (ver sus cambios).
 - Probar `/afsd:build` en real: que los agentes del workflow tienen el MCP de Xcode y las skills de AFSD, que `Workflow(afsd:build)` y los demás permisos evitan preguntas, y cuánto gasta una spec.
 - Probar el hook Stop en real.
 - Comprobar el nombre real de las herramientas MCP de Xcode en Claude Code (el hook de edición reconoce `mcp__…XcodeWrite/XcodeUpdate`).
 - Fase 2: modo `afsd arch check`; comprobación de Reglas en `afsd plan`; lista de deuda (Objetivo frente a Actual) en `index.md`; tamaños S/M/L; paquetes Swift locales como opción del preset.
 - Skill propia de código Swift (convenciones de Carlos) dentro del plugin.
 - Probar `afsd adopt`, `afsd auto` y `afsd quick` en proyectos reales.
-- Completar autor y licencia de las skills de terceros (`THIRD_PARTY_NOTICES.md`) antes de publicar.
+- Sustituir «Carlos» por tu nombre completo en el copyright de `THIRD_PARTY_NOTICES.md` y decidir la licencia del resto del plugin (no hay `LICENSE` en la raíz).
 ## Notas para quien (o el agente que) continúe
 - El plug-in usa el mismo formato que los de Claude Code: `.claude-plugin/plugin.json` + `skills/<nombre>/SKILL.md`.
 - Editar las skills en esta carpeta; en Xcode, quitar y volver a añadir el plug-in para que cargue los cambios.

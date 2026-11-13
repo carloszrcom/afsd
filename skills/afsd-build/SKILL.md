@@ -9,6 +9,7 @@ Construye una app (o un juego) entera a partir de su documento de diseño:
 - `afsd build plan <doc.md>`: **interactivo, una sola vez**. Convierte el documento en `02-DOCS/specs/_roadmap.md` y el usuario lo aprueba.
 - `/afsd:build`: el **workflow** del plugin (`workflows/afsd-build.js`). Recorre el roadmap spec a spec; cada fase (spec, plan, código, verificación, revisión independiente, cierre y commit) la hace un agente nuevo con el contexto limpio, y los resultados quedan en variables del script, no en el chat. Lo lanza el usuario; esta skill no lo ejecuta.
 - `afsd build report`: resumen de lo que necesita revisión humana.
+- `/afsd:stop` y `/afsd:resume`: crean y quitan `02-DOCS/build/STOP`. Con ese archivo, el workflow para **al terminar la spec en curso** (tras su commit) y no arranca si existe. Para parar al instante, cancela (se retoma sin perder nada, pero puede repetir la tarea en curso).
 
 Si falta `02-DOCS/`, di que antes hay que crear el proyecto en Xcode y ejecutar `afsd init` (o `afsd adopt`) y `afsd arch define`, y para.
 
@@ -21,6 +22,7 @@ Si falta `02-DOCS/`, di que antes hay que crear el proyecto en Xcode y ejecutar 
 3. **Tecnología:** atente a lo que ya hay (proyecto, `arquitectura.md`, frameworks: SwiftUI, SpriteKit, SceneKit, RealityKit…).
    Si el documento pide algo que no encaja, o ves una mejora clara, **propónla** con su porqué y su coste; no la apliques sin un sí (queda como `D-NN`).
    Para que se pueda probar sin personas: la lógica del juego va en modelos Swift puros (Domain) con tests; el render y las vistas, finos por encima.
+3b. **Proyecto de tests:** carga la skill `afsd-init` y haz solo su paso 3b (scheme testable y versión mínima de iOS frente al simulador activo). Si falla, para aquí y explica el arreglo: no sigas con el roadmap hasta que se resuelva.
 4. **Preguntas:** máximo 8, de una vez, cada una con tu recomendación. Solo lo que el documento no resuelve y cambia el resultado.
    Después no habrá más preguntas: lo que quede abierto lo decidirá `next` y lo marcará `[revisar]`.
 5. **Roadmap:** `02-DOCS/specs/_roadmap.md`, features en orden de dependencias; cada una con 1–4 specs pequeñas (máx. 8 criterios, comprobables con test o en el simulador):
@@ -45,15 +47,25 @@ Fuente: <ruta del documento, relativa a la raíz del proyecto (ej. docs/diseno.m
    - Roadmap `Estado: aprobado`. Si hay git y el árbol está limpio, `git switch -c afsd/build` (si no está limpio, pide un commit antes). Commit solo de `02-DOCS/`: `chore(build): roadmap`. Sin push.
    - `estado.md`: Fase: ninguna · Siguiente paso: `/afsd:build`.
    - **Permisos**, para que los agentes del workflow no se paren a preguntar: propón añadir a `.claude/settings.local.json` (créalo, o mézclalo sin borrar nada) en `permissions.allow`:
-     `"Edit"`, `"Write"`, `"Bash(git status)"`, `"Bash(git status *)"`, `"Bash(git diff *)"`, `"Bash(git add *)"`, `"Bash(git commit *)"`, `"Bash(git stash *)"`, `"Bash(git log *)"`, `"Bash(git rev-parse *)"`, `"Bash(xcodebuild *)"`, `"Bash(xcrun simctl *)"`, `"Bash(bash 01-TOOLS/*)"`, `"Bash(zsh 01-TOOLS/*)"`, `"Bash(mkdir *)"`, `"Bash(touch *)"`, `"mcp__plugin_xcode-integration_xcode"`, `"Workflow(afsd:build)"`.
+     `"Edit"`, `"Write"`, `"Bash(git status)"`, `"Bash(git status *)"`, `"Bash(git diff *)"`, `"Bash(git add *)"`, `"Bash(git commit *)"`, `"Bash(git stash *)"`, `"Bash(git log *)"`, `"Bash(git rev-parse *)"`, `"Bash(xcodebuild *)"`, `"Bash(xcrun simctl *)"`, `"Bash(bash 01-TOOLS/*)"`, `"Bash(zsh 01-TOOLS/*)"`, `"Bash(mkdir *)"`, `"Bash(touch *)"`, `"Bash(rm -f 02-DOCS/build/STOP)"`, `"mcp__plugin_xcode-integration_xcode"`, `"Workflow(afsd:build)"`.
      Muéstralo y escríbelo solo con un sí. Si git no lo ignora (`git check-ignore .claude/settings.local.json`), añádelo a `.git/info/exclude` (no a `.gitignore`), porque el workflow exige el árbol limpio.
    - Termina con **Siguiente — en este chat o en uno nuevo de `cxa`:** `/afsd:build` (para probar con pocas: `/afsd:build con maxSpecs 3`).
      Añade en una línea: deja Claude Code abierto y el Mac despierto (`caffeinate -dims` en otra terminal); el progreso se ve con `/workflows` (`p` pausa, `x` para).
+
+## Decisiones bloqueantes
+Si un agente toma una decisión que cambia lo que la spec tiene que cumplir (valores, reglas o comportamiento del diseño, o no pudo leer el diseño), la anota en `decisions.md` terminada en `[bloqueante]` en lugar de `[revisar]`. El workflow aparca esa spec (commit `wip(build): … pendiente de decisión`, fila del roadmap `pendiente de decisión`) y sigue con las specs que no dependen de ella. Las que dependen quedan sin hacer.
+Para resolverla: en `decisions.md` cambia `[bloqueante]` por `[decidido]` (puedes corregir el texto de la decisión) y vuelve a lanzar `/afsd:build`; los agentes tratan las líneas `[decidido]` como órdenes tuyas. Si prefieres que el workflow pare del todo en vez de seguir con otras specs, pon `PARAR_SI_BLOQUEANTE = true` al principio de `workflows/afsd-build.js`.
+
+## Tests y coste
+Cada spec ejecuta solo los tests de su zona; la **suite completa** se ejecuta en la última spec de cada feature (y en la última de la tanda si usas `maxSpecs`). Si una ejecución no termina, el verificador la abandona y devuelve los tests colgados (`started` sin resultado) para que el agente de arreglo les ponga `.timeLimit`.
+Tras cada spec se añade una línea a `02-DOCS/build/coste.md` (minutos, rondas de código, arreglos, tests). Los **tokens** por spec no los ve el script: míralos en `/workflows`.
 
 ## Modo report
 Lee `_roadmap.md`, `02-DOCS/build/revision.md`, las líneas `[revisar]` de `decisions.md` y `git stash list` (solo `afsd-build`). Máximo 25 líneas:
 - progreso (features hechas / total) y bloqueadas, con su motivo y su stash;
 - qué probar en el simulador (de `revision.md`), agrupado por pantalla;
+- specs pendientes de decisión (líneas `[bloqueante]` de `decisions.md`) y cómo resolverlas (`[decidido]`);
+- coste: resumen de `02-DOCS/build/coste.md` (specs más caras o con más arreglos);
 - decisiones a revisar y reglas propuestas para `CLAUDE.md` (se aplican con `afsd lessons review`);
 - pagos: `pagos-revenuecat` está escrita y aparcada → cuando quieras, `afsd feature pagos-revenuecat`.
 Termina con **Siguiente** y el prompt exacto (normalmente: probar en el simulador y luego `afsd quick <ajuste>` o `afsd feature <cambio>`).

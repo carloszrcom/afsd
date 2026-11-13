@@ -59,6 +59,10 @@ exit $rc
    En `arquitectura.md`, línea **Comandos** de Actual, añade `· simulador: el activo en Xcode`.
    Dale permiso de ejecución (`chmod +x`) y, si hay git, `git update-index --chmod=+x 01-TOOLS/build/test.sh`. Si no queda ejecutable, se lanza con `zsh 01-TOOLS/build/test.sh`.
 
+3b. **Comprobaciones del proyecto de tests** (una sola vez; si fallan, para y dilo con el arreglo, sin seguir):
+   - **Scheme testable.** Lee `<proyecto>.xcodeproj/xcshareddata/xcschemes/<scheme>.xcscheme` (o en `xcuserdata/`). Debe tener un `<TestableReference>` en la acción de Test (o un `<TestPlans>`) y `buildForTesting = "YES"` en la entrada de build del target de tests. Si falta, avisa: «El scheme `<scheme>` no es testable: en Xcode, Product > Scheme > Edit Scheme > Test, añade el target de tests; y en Build marca la casilla Test». Ofrece arreglar el `.xcscheme` tú, pero solo con su permiso.
+   - **Versión mínima de iOS.** Ejecuta `grep -h IPHONEOS_DEPLOYMENT_TARGET *.xcodeproj/project.pbxproj | sort | uniq -c`. Si el simulador activo (el de `XcodeListRunDestinations`, o el de `test.sh`) tiene una iOS menor que el valor más alto, los tests no podrán ejecutarse: para y avisa («los tests piden iOS X y el simulador activo es iOS Y; elige uno de iOS X o más en Xcode, o baja el mínimo del target de tests»). Si la app y el target de tests tienen valores distintos, avísalo y pregunta cuál es el correcto; no los cambies tú.
+
 4. Si no existe `.gitignore`, créalo con `xcuserdata/`, `.DS_Store` y `DerivedData/`.
    Si ya existe, no lo modifiques: di qué de esas entradas falta y añádelas solo si el usuario dice que sí.
 

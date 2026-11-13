@@ -51,6 +51,11 @@ Proyectos ya creados: sustituye su bloque `## AFSD` de `CLAUDE.md` por el de `sk
 3. `cxa` → `afsd init` → `/clear` → `afsd arch define` (si hay compras: «sí, pagos con RevenueCat»). Commit.
 4. `/clear` → `afsd build plan docs/diseno.md` → responde las preguntas → `apruebo el roadmap` → acepta los permisos que propone.
 5. `/afsd:build` (prueba corta: `/afsd:build con maxSpecs 3`). Sigue el progreso con `/workflows`; deja el Mac despierto (`caffeinate -dims` en otra terminal).
+   - **Parar sin cortar a mitad de spec:** `/afsd:stop` (o `touch 02-DOCS/build/STOP`): acaba la spec en curso, hace su commit y se detiene. Para seguir: `/afsd:resume` (o `rm 02-DOCS/build/STOP`) y `/afsd:build`.
+   - **Parar al instante:** cancela. Se retoma igual, pero puede repetir la tarea en curso.
+   - **Retomar:** `/afsd:build` siempre sigue por la primera spec pendiente; no hace falta pedirle que revise los docs.
+   - **Spec «pendiente de decisión»:** el agente anotó una decisión `[bloqueante]` en `decisions.md`. Cambia `[bloqueante]` por `[decidido]` (puedes corregir el texto) y relanza.
+   - **Coste:** `02-DOCS/build/coste.md` (minutos, rondas, arreglos, tests por spec); los tokens, en `/workflows`.
 6. Al terminar: `/clear` → `afsd build report` → prueba en el simulador lo que te diga → ajustes con `afsd quick` o `afsd feature`.
 7. Merge de la rama `afsd/build` cuando te guste. Pagos reales: `afsd feature pagos-revenuecat`.
 
@@ -62,5 +67,5 @@ Sin MCP, `01-TOOLS/build/test.sh` usa el que estaba seleccionado al hacer `afsd 
 - `afsd ping` → comprueba que el plugin carga (versión, hooks, proyecto).
 - `bash 01-TOOLS/arch/check.sh` → huella y violaciones de arquitectura.
 - `afsd arch sync` → rehace el mapa si cambiaste estructura fuera del flujo.
-- Sin probar aún en real: `adopt`, `auto`, `quick`, `lessons`, `build` y los hooks.
+- Sin probar aún en real: `adopt`, `auto`, `quick`, `lessons`, `build` y los hooks (en `build`, lo nuevo de 0.10.0: `/afsd:stop`, `/afsd:resume`, `[bloqueante]` y el coste).
 - Estado actual: `02-DOCS/wiki/estado.md`.
